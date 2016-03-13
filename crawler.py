@@ -17,6 +17,8 @@ import re
 import codecs
 import time
 import random
+import csv
+import sys
 
 get_yelp_page = \
     lambda zipcode, page_num: \
@@ -58,6 +60,12 @@ def crawl_page(zipcode, page_num, verbose=False):
         # False is a special flag, returned when quitting
         return [], False
 
+    field_names = ('title', 'categories', 'rating', 'img', 'addr', 'phone', 'price', 'menu',
+           'creditCards', 'parking', 'attire', 'groups', 'kids', 'reservations', 'delivery', 'takeout',
+           'waiterService', 'outdoor', 'wifi', 'goodFor', 'alcohol', 'noise', 'ambience', 'tv', 'caters',
+           'wheelchairAccessible')
+    writer = csv.DictWriter(sys.stdout, field_names)
+    writer.writeheader()
     extracted = [] # a list of tuples
     for r in restaurants:
         img = ''
@@ -203,38 +211,41 @@ def crawl_page(zipcode, page_num, verbose=False):
         except Exception, e:
             if verbose: print "**failed to get you a page", str(e)
 
-        if title: print 'title:', title
-        if categories: print 'categories:', categories
-        if rating: print 'rating:', rating
-        if img: print 'img:', img
-        if addr: print 'address:', addr
-        if phone: print 'phone:', phone
-        if price: print 'price:', price
-        if menu: print 'menu:', menu
-        if creditCards: print 'creditCards:', creditCards
-        if parking: print 'parking:', parking
-        if attire: print 'attire:', attire
-        if groups: print 'groups:', groups
-        if kids: print 'kids:', kids
-        if reservations: print 'reservations:', reservations
-        if delivery: print 'delivery:', delivery
-        if takeout: print 'takeout:', takeout
-        if waiterService: print 'waiterService:', waiterService
-        if outdoor: print 'outdoor:', outdoor
-        if wifi: print 'wifi:', wifi
-        if goodFor: print 'goodFor:', goodFor
-        if alcohol: print 'alcohol:', alcohol
-        if noise: print 'noise:', noise
-        if ambience: print 'ambience:', ambience
-        if tv: print 'tv:', tv
-        if caters: print 'caters:', caters
-        if wheelchairAccessible: print 'wheelchairAccessible:', wheelchairAccessible
+        if verbose:
+            if title: print 'title:', title
+            if categories: print 'categories:', categories
+            if rating: print 'rating:', rating
+            if img: print 'img:', img
+            if addr: print 'address:', addr
+            if phone: print 'phone:', phone
+            if price: print 'price:', price
+            if menu: print 'menu:', menu
+            if creditCards: print 'creditCards:', creditCards
+            if parking: print 'parking:', parking
+            if attire: print 'attire:', attire
+            if groups: print 'groups:', groups
+            if kids: print 'kids:', kids
+            if reservations: print 'reservations:', reservations
+            if delivery: print 'delivery:', delivery
+            if takeout: print 'takeout:', takeout
+            if waiterService: print 'waiterService:', waiterService
+            if outdoor: print 'outdoor:', outdoor
+            if wifi: print 'wifi:', wifi
+            if goodFor: print 'goodFor:', goodFor
+            if alcohol: print 'alcohol:', alcohol
+            if noise: print 'noise:', noise
+            if ambience: print 'ambience:', ambience
+            if tv: print 'tv:', tv
+            if caters: print 'caters:', caters
+            if wheelchairAccessible: print 'wheelchairAccessible:', wheelchairAccessible
 
-        print '=============='
-        # extracted.append((title, categories, rating, img, addr, phone, price, menu,
-        #    creditCards, parking, attire, groups, kids, reservations, delivery, takeout,
-        #    waiterService, outdoor, wifi, goodFor, alcohol, noise, ambience, tv, caters,
-        #    wheelchairAccessible))
+        row= dict(title=title, categories=categories, rating=rating, img=img, addr=addr, phone=phone, price=price, menu=menu,
+           creditCards=creditCards, parking=parking, attire=attire, groups=groups, kids=kids, reservations=reservations, delivery=delivery, takeout=takeout,
+           waiterService=waiterService, outdoor=outdoor, wifi=wifi, goodFor=goodFor, alcohol=alcohol, noise=noise, ambience=ambience, tv=tv, caters=caters,
+           wheelchairAccessible=wheelchairAccessible)
+        writer.writerow({k:v.encode('utf8') for k,v in row.items()})
+
+
 
     return extracted, True
 
@@ -247,11 +258,11 @@ def crawl(zipcode=None):
         print '\n**We are attempting to extract all zipcodes in America!**'
 
     for zipcode in some_zipcodes:
-        print '\n===== Attempting extraction for zipcode <', zipcode, '>=====\n'
+        # print '\n===== Attempting extraction for zipcode <', zipcode, '>=====\n'
         while flag:
             extracted, flag = crawl_page(zipcode, page)
             if not flag:
-                print 'extraction stopped or broke at zipcode'
+                # print 'extraction stopped or broke at zipcode'
                 break
             page += 10
             time.sleep(random.randint(1, 2) * .931467298)
