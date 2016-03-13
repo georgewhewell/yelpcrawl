@@ -19,6 +19,7 @@ import time
 import random
 import csv
 import sys
+import usaddress
 
 get_yelp_page = \
     lambda zipcode, page_num: \
@@ -63,7 +64,7 @@ def crawl_page(zipcode, page_num, verbose=False):
     field_names = ('title', 'categories', 'rating', 'img', 'addr', 'phone', 'price', 'menu',
            'creditCards', 'parking', 'attire', 'groups', 'kids', 'reservations', 'delivery', 'takeout',
            'waiterService', 'outdoor', 'wifi', 'goodFor', 'alcohol', 'noise', 'ambience', 'tv', 'caters',
-           'wheelchairAccessible')
+           'wheelchairAccessible') + tuple(usaddress.LABELS)
     writer = csv.DictWriter(sys.stdout, field_names)
     writer.writeheader()
     extracted = [] # a list of tuples
@@ -121,6 +122,7 @@ def crawl_page(zipcode, page_num, verbose=False):
             addr = r.find('div', {'class':'secondary-attributes'}).address.getText()
         except Exception, e:
             if verbose: print 'address extract fail', str(e)
+
         try:
             phone = r.find('div', {'class':'secondary-attributes'}).span.getText()
         except Exception, e:
@@ -239,13 +241,14 @@ def crawl_page(zipcode, page_num, verbose=False):
             if caters: print 'caters:', caters
             if wheelchairAccessible: print 'wheelchairAccessible:', wheelchairAccessible
 
-        row= dict(title=title, categories=categories, rating=rating, img=img, addr=addr, phone=phone, price=price, menu=menu,
+        row = dict(title=title, categories=categories, rating=rating, img=img, addr=addr, phone=phone, price=price, menu=menu,
            creditCards=creditCards, parking=parking, attire=attire, groups=groups, kids=kids, reservations=reservations, delivery=delivery, takeout=takeout,
            waiterService=waiterService, outdoor=outdoor, wifi=wifi, goodFor=goodFor, alcohol=alcohol, noise=noise, ambience=ambience, tv=tv, caters=caters,
            wheelchairAccessible=wheelchairAccessible)
+        # dont know why we need to switch these
+        parsed_address = usaddress.parse(addr)
+        row.update({v: k for k,v in parsed_address})
         writer.writerow({k:v.encode('utf8') for k,v in row.items()})
-
-
 
     return extracted, True
 
